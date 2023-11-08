@@ -6,6 +6,12 @@
 #include <fstream>
 #include <cstring>
 
+/*
+ * To do:
+ * - read stdin for random input
+ * - generate prime numbers from stdin data
+ */
+
 struct keyInfo
 {
     BIGNUM *d;
@@ -65,13 +71,9 @@ void rsaKeyGen(keyInfo *key, unsigned long exponent, int keySize)
     BIGNUM *dmq1 = BN_new();
     BIGNUM *iqmp = BN_new();
     BIGNUM *dm = BN_new();
-    BIGNUM *bn_p = BN_new();
-    BIGNUM *bn_q = BN_new();
 
     BN_sub(dm, d, BN_value_one());
-    BN_sub(bn_p, bn_p, BN_value_one());
-    BN_sub(bn_q, bn_q, BN_value_one());
-    BN_mod(dmp1, d, qm, ctx);
+    BN_mod(dmp1, d, pm, ctx);
     BN_mod(dmq1, d, qm, ctx);
     BN_mod_inverse(iqmp, q, p, ctx);
 
@@ -88,8 +90,6 @@ void rsaKeyGen(keyInfo *key, unsigned long exponent, int keySize)
 
     // clean
     BN_free(gcd);
-    BN_free(bn_p);
-    BN_free(bn_q);
 }
 
 bool isPrime(unsigned long n)
