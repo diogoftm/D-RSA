@@ -1,0 +1,91 @@
+% install texlive-science to enable algorithm package %
+
+\documentclass{article} % Use the report class instead of article
+\usepackage{titlesec}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{amsmath} % Add this line to use \text
+\usepackage{tabularx}
+\usepackage{algorithm}
+\usepackage{tcolorbox}
+\usepackage[noend]{algpseudocode}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+  language=Java,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+
+\graphicspath{{./assets/images/}}
+
+\title{%
+    \includegraphics[width=0.3\linewidth]{./assets/logo.pdf}\\[20pt]
+    \Huge \bfseries Criptografia aplicada \\[10pt]
+    \Large DRSA
+}
+\author{Tiago Silvestre, 103554 \\ Diogo Matos, 102848}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\newpage
+
+\tableofcontents
+
+\clearpage
+
+\section{Introduction}
+...
+
+\section{Implementation}
+\subsection{Random byte generator}
+...
+
+\subsection{RSA key-pair generator}
+
+This process is followed in order to generate a RSA key-pair:
+\begin{enumerate}
+  \item Inputs: exponent, $e$, and the key size.
+  \item Generate two random prime numbers, $p$ and $q$, with a size equal to half of the key length.
+  In order to generete a random prime number, we use our random byte genartor to generate
+  a value with the needed size, then we perform a primality test (to do: detail, a heuristic
+  or probabilistic method might be interesting...);
+  \item Compute $n$, $n=p*q$;
+  \item Compute Carmichael's totient function, $y(n)$, for that we compute $$y(n)=\frac{(p-1)(q-1)}{\gcd((p-1),(q-1))}$$.
+  After the computation, we check the condition $$gcd(e, y(n)) = 1$$, if false we do not proced;
+  \item Compute $d$, the modular inverse, $$d=e^{-1} \bmod{y(n)}$$;
+  \item Compute Chinese remainder theorem related constants, $dmp1$, $dmq1$ and $iqmp$. 
+  $$dmp1=d \bmod{(p-1)}$$, $$dmq1=d \bmod{(q-1)}$$, $$iqmp1=q \bmod{p}$$;
+  \item $n$, $e$, $d$, $p$, $q$, $dmp1$, $dmq1$ and $iqmp1$ are the private key. $n$, $e$ and $d$ are the public key.
+\end{enumerate}
+
+All the computed values are used to initialize a OpenSSL RSA key object that is then exported as two PEM files, one 
+with the public information and other with the private.
+
+\section{Discussion}
+...
+
+\section{Conclusions}
+
+...
+
+\end{document}
