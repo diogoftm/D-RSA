@@ -1,6 +1,6 @@
 #include "generator.h"
 #include "generatorException.h"
-#include <openssl/evp.h>
+
 
 Generator::Generator(GeneratorArgs args)
 {
@@ -28,6 +28,8 @@ void Generator::setup()
 
     setupDone = true;
 }
+
+
 
 void Generator::nextBlock(uint8_t *block, int blockLength)
 {
@@ -90,17 +92,46 @@ void Generator::initializeGenerator(Seed &seed)
         throw GeneratorException("Error while initializing generator", GeneratorExceptionTypes::GENERATOR_SETUP_ERROR);
 }
 
+void Generator::calculateSeed(Seed& outSeed, const SHA256Result& hashResult, const LeadingPatternBytes& leadingBytes) {
+    auto ctx = EVP_MD_CTX_new();
+
+    EVP_DigestInit(ctx, EVP_sha256());
+    EVP_DigestUpdate(ctx, hashResult.bytes, sizeof(hashResult.bytes));
+    EVP_DigestUpdate(ctx, leadingBytes.bytes, sizeof(leadingBytes.bytes));
+
+    unsigned int mdLen;
+    EVP_DigestFinal(ctx, &outSeed.bytes[0], &mdLen);
+    EVP_MD_CTX_free(ctx);
+}
+
 void Generator::findNextSeedByPattern(const Pattern &pattern, Seed &seed)
 {
-    uint8_t lbatch[4];
-    uint8_t rbatch[4];
+    auto mdCtx = EVP_MD_CTX_new();
+    EVP_DigestInit(mdCtx, EVP_sha256());
 
-    do {
-        
-        this->seekNextBytesFromGenerator(lbatch, sizeof(lbatch));
-        this->seekNextBytesFromGenerator(rbatch, sizeof(rbatch));
+    uint8_t B0, B1;
+    SHA256Result result;
+    LeadingPatternBytes leading;
 
-        //todo: finish this
-    } while(true);
+    this->seekNextBytesFromGenerator(&B0, 1);
+    
+    for(;;) {
+        this->seekNextBytesFromGenerator(&B1, 1);
+
+        if(pattern.bytes[0] == B0 && pattern.bytes[1] == B1) {
+            EVP_DigestFinal(mdCtx, result.bytes, NULL);
+            
+            this->seekNextBytesFromGenerator(leading.bytes, 32);
+            this->calculateSeed(seed, result, leading);
+            EVP_MD_CTX_free(mdCtx);
+            return;
+
+        } else {
+            EVP_DigestUpdate(mdCtx, &B0, 1);
+            B0 = B1;
+        }
+    }
+
+
 }
  

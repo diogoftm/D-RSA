@@ -2,6 +2,7 @@
 
 #include <string>
 #include <bitset>
+#include <openssl/evp.h>
 
 #define PatternBytes 2
 #define ZEROS_ARRAY_SIZE 4096
@@ -11,14 +12,20 @@ union Pattern {
     uint16_t hword[PatternBytes / 2];
 };
 
+
+
 struct Cipher {
     const EVP_CIPHER* cipher = EVP_chacha20();
     EVP_CIPHER_CTX* ctx = NULL;
 };
 
-struct Seed {
+struct _32Bytes {
     uint8_t bytes[32];
 };
+
+using Seed = _32Bytes;
+using SHA256Result = _32Bytes;
+using LeadingPatternBytes = _32Bytes;
 
 
 struct GeneratorArgs {
@@ -48,6 +55,7 @@ class Generator {
         
         static void generatePattern(Pattern& pattern, const std::string& const confusionString);
 
+        inline void calculateSeed(Seed& outSeed, const SHA256Result& result, const LeadingPatternBytes& leadingBytes);
         GeneratorArgs args;
         Cipher cipher;
         bool setupDone = false;
