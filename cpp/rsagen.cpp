@@ -8,8 +8,7 @@
 
 /*
  * To do:
- * - read stdin for random input
- * - generate prime numbers from stdin data
+ * - use our RNG
  */
 
 struct keyInfo
@@ -25,16 +24,51 @@ struct keyInfo
     BIGNUM *iqmp1;
 };
 
+// generate prime value using input from stdin
+BIGNUM *genPrime(int valSize, BN_CTX *bnCtx)
+{
+    BIGNUM *value = BN_new();
+    BIGNUM *two = BN_new();
+    BN_set_word(two, 2);
+
+    unsigned char buffer[valSize / 8];
+    int isPrime = 0;
+    while (!isPrime)
+    {
+        std::cin.read(reinterpret_cast<char *>(buffer), valSize / 8);
+
+        if (!std::cin)
+        {
+            std::cerr << "Failed to read random bytes from stdin." << std::endl;
+            return nullptr;
+        }
+
+        buffer[valSize / 8] = buffer[valSize / 8] & 0b11111110; // to make sure the value is odd
+
+        BN_bin2bn(buffer, valSize / 8, value);
+
+        isPrime = BN_is_prime_fasttest(value, 64, NULL, bnCtx, NULL, 0);
+
+        if (isPrime)
+        {
+            break;
+        }
+
+        BN_add(value, value, two);
+    }
+
+    BN_free(two);
+
+    return value;
+}
+
+// generate RSA key-pair values
 void rsaKeyGen(keyInfo *key, unsigned long exponent, int keySize)
 {
     // choose two large prime numbers
     BN_CTX *ctx = BN_CTX_new();
-    BIGNUM *p = BN_new();
-    BN_set_bit(p, 1024);
-    BIGNUM *q = BN_new();
-    BN_set_bit(q, 1024);
-    BN_generate_prime_ex(p, keySize / 2, 1, NULL, NULL, NULL);
-    BN_generate_prime_ex(q, keySize / 2, 1, NULL, NULL, NULL);
+    BIGNUM *p = genPrime(keySize / 2, ctx);
+    BIGNUM *q = genPrime(keySize / 2, ctx);
 
     // n = pq
     BIGNUM *n = BN_new();
@@ -57,7 +91,8 @@ void rsaKeyGen(keyInfo *key, unsigned long exponent, int keySize)
 
     // check gcd(e, λ(n)) = 1
     BN_gcd(gcd, e, yn, ctx);
-    if(BN_cmp(gcd, BN_value_one())!=0){
+    if (BN_cmp(gcd, BN_value_one()) != 0)
+    {
         std::cerr << "Error: Invalid condition gcd(e, λ(n)) = 1" << std::endl;
         exit(1);
     }
@@ -92,6 +127,7 @@ void rsaKeyGen(keyInfo *key, unsigned long exponent, int keySize)
     BN_free(gcd);
 }
 
+// simple test for small numbers
 bool isPrime(unsigned long n)
 {
     if (n == 2 || n == 3)
@@ -152,7 +188,7 @@ int main(int argc, char const *argv[])
     keyInfo keyPair;
     rsaKeyGen(&keyPair, exponent, keySize);
 
-    // Save keys in PEM format
+    // save keys in PEM format
     RSA *rsa = RSA_new();
     RSA_set0_key(rsa, keyPair.n, keyPair.e, keyPair.d);
     RSA_set0_factors(rsa, keyPair.p, keyPair.q);
