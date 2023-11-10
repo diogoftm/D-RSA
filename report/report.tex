@@ -66,9 +66,10 @@ This process is followed in order to generate a RSA key-pair:
 \begin{enumerate}
   \item Inputs: exponent, $e$, and the key size.
   \item Generate two random prime numbers, $p$ and $q$, with a size equal to half of the key length.
-  In order to generete a random prime number, we use our random byte genartor to generate
-  a value with the needed size, then we perform a primality test (to do: detail, a heuristic
-  or probabilistic method might be interesting...);
+  In order to generete a random prime number, we use our random byte generator to generate
+  a value with the needed size, then we perform a primality test, the value 2 is added to the value until it passes primality test;
+  OpenSSL's Big Num \textit{BN_is_prime_fasttest_ex} is used to perform the primality test. It starts by making a trial division by a set of
+  small prime numbers and then at least 64 rounds of Miller-Rabin (128 rounds for numbers larger than 2048 bits).
   \item Compute $n$, $n=p*q$;
   \item Compute Carmichael's totient function, $y(n)$, for that we compute $$y(n)=\frac{(p-1)(q-1)}{\gcd((p-1),(q-1))}$$.
   After the computation, we check the condition $$gcd(e, y(n)) = 1$$, if false we do not proced;
