@@ -5,11 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
-
-/*
- * To do:
- * - use our RNG
- */
+#include <stdexcept>
 
 struct keyInfo
 {
@@ -33,28 +29,23 @@ BIGNUM *genPrime(int valSize, BN_CTX *bnCtx)
 
     unsigned char buffer[valSize / 8];
     int isPrime = 0;
+
+    std::cin.read(reinterpret_cast<char *>(buffer), valSize / 8);
+
+    if (!std::cin)
+    {
+        std::cerr << "Failed to read random bytes from stdin." << std::endl;
+        return nullptr;
+    }
+
+    buffer[valSize / 8 - 1] |= 0x01; // to make sure the value is odd
+
+    BN_bin2bn(buffer, valSize / 8, value);
+
     while (!isPrime)
     {
-        std::cin.read(reinterpret_cast<char *>(buffer), valSize / 8);
-
-        if (!std::cin)
-        {
-            std::cerr << "Failed to read random bytes from stdin." << std::endl;
-            return nullptr;
-        }
-
-        buffer[valSize / 8] = buffer[valSize / 8] & 0b11111110; // to make sure the value is odd
-
-        BN_bin2bn(buffer, valSize / 8, value);
-
-        isPrime = BN_is_prime_fasttest(value, 64, NULL, bnCtx, NULL, 0);
-
-        if (isPrime)
-        {
-            break;
-        }
-
         BN_add(value, value, two);
+        isPrime = BN_is_prime_fasttest(value, 128, NULL, bnCtx, NULL, 1);   
     }
 
     BN_free(two);
@@ -90,11 +81,12 @@ void rsaKeyGen(keyInfo *key, unsigned long exponent, int keySize)
     BN_set_word(e, exponent);
 
     // check gcd(e, λ(n)) = 1
-    BN_gcd(gcd, e, yn, ctx);
-    if (BN_cmp(gcd, BN_value_one()) != 0)
+    BIGNUM *g = BN_new();
+    BN_gcd(g, e, yn, ctx);
+    
+    if (BN_is_one(g) != 1)
     {
-        std::cerr << "Error: Invalid condition gcd(e, λ(n)) = 1" << std::endl;
-        exit(1);
+        throw std::logic_error("check gcd(e, λ(n)) != 1");
     }
 
     // modular inverse
@@ -125,6 +117,7 @@ void rsaKeyGen(keyInfo *key, unsigned long exponent, int keySize)
 
     // clean
     BN_free(gcd);
+    //BN_free(g);
 }
 
 // simple test for small numbers
@@ -154,7 +147,7 @@ int main(int argc, char const *argv[])
     if (argc < 3)
     {
         std::cerr << "Usage: " << argv[0] << " <private_key_file> <public_key_file> [-s | -e]" << std::endl
-                  << "-e: set exponent value (65537 default)\n-s: key size (2048 default)" << std::endl;
+                  << "-e: set exponent value (65535 default)\n-s: key size (2048 default)" << std::endl;
         return 1;
     }
     else if (argc > 3)
@@ -186,8 +179,18 @@ int main(int argc, char const *argv[])
 
     // generate key-pair
     keyInfo keyPair;
-    rsaKeyGen(&keyPair, exponent, keySize);
-
+    while(1)
+    {
+        try
+        {
+            rsaKeyGen(&keyPair, exponent, keySize);
+            break;
+        } catch(std::logic_error& e)
+        {
+            continue;
+        }
+    }
+    
     // save keys in PEM format
     RSA *rsa = RSA_new();
     RSA_set0_key(rsa, keyPair.n, keyPair.e, keyPair.d);
