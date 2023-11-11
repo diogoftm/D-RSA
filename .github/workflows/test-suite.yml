@@ -32,6 +32,6 @@ jobs:
         make
 
     - name: Run test Suite
-      working-directory: tests
+      working-directory: cpp
       run: |
-        sh run-all-tests.sh
+        ./test_RBG
