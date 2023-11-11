@@ -1,7 +1,7 @@
 {
   "plots": {
     "minIterations" : 10,
-    "maxIterations" : 1000,
+    "maxIterations" : 5000,
     "numSteps" : 20
   },
   "implementation": {

@@ -1,12 +1,9 @@
-import matplotlib
 import sys
 import json
-from jsonschema import validate, ValidationError
-from dataclasses import dataclass
+from jsonschema import validate
 import matplotlib.pyplot as plt
 from time import monotonic
 import subprocess
-import tqdm
 
 def printUsage():
     print(
@@ -80,7 +77,7 @@ def collectDataFromConfig(config):
 
         while currentStep < numSteps:
             citer = findCurrentIteration(minIterations,maxIterations,currentStep,numSteps)
-            command = f"./cpp/RBG PW CS {citer} --limit 1"
+            command = f"./../cpp/RBG PW CS {citer} --limit 1"
 
 
             with open('/dev/null', 'w') as devnull:
