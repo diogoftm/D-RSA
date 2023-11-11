@@ -1,3 +1,4 @@
 *.o
 RBG
 rsagen
+*.pem
