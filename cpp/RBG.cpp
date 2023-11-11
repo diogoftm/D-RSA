@@ -4,7 +4,7 @@
 #include <optional>
 #include <string>
 
-#define MIN(A,B) A > B ? B : A
+#define MIN(A, B) A > B ? B : A
 
 const static char *usage = "usage: ./RBG password confusionString iterationCount [--limit nbytes]";
 
@@ -49,9 +49,10 @@ void getOptionalArguments(OptionalArguments &args, int argc, char *argv[])
 
     std::string limitString = "--limit";
 
-    if(limitString.compare(argv[4])) {
+    if (limitString.compare(argv[4]))
+    {
         throw std::invalid_argument("Unrecognized argument '" + std::string(argv[4]) + "'");
-    }   
+    }
 
     int limit;
 
@@ -75,13 +76,16 @@ void produceDataUntilLimit(Generator &generator, std::optional<int> limit)
     uint8_t block[1024];
     int bytesWritten = 0, bytesToWrite = 0, missingBytes = 0;
 
-    while (!limit.has_value() || bytesToWrite < limit.value())
+    while (!limit.has_value() || bytesWritten < limit.value())
     {
         generator.nextBlock(block, sizeof(block));
 
-        if(!limit.has_value()) {
+        if (!limit.has_value())
+        {
             bytesToWrite = sizeof(block);
-        } else {
+        }
+        else
+        {
             missingBytes = limit.value() - bytesWritten;
             bytesToWrite = MIN((int)sizeof(block), missingBytes);
         }
@@ -89,7 +93,6 @@ void produceDataUntilLimit(Generator &generator, std::optional<int> limit)
         fwrite(block, sizeof(uint8_t), bytesToWrite, stdout);
         bytesWritten += bytesToWrite;
     }
-
 }
 
 int main(int argc, char *argv[])
