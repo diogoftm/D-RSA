@@ -8,7 +8,7 @@ const static char* usage = "usage: ./RBG password confusionString iterationCount
 void getGeneratorArgsFromArgs(GeneratorArgs &args, int argc, char *argv[])
 {
     if(argc != 4)
-        throw std::invalid_argument("Expected three arguments");
+        throw std::invalid_argument("Expected three arguments (received " + std::to_string(argc) + ")");
 
     std::string PW = std::string(argv[1]);
     std::string CS = std::string(argv[2]);
