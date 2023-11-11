@@ -117,10 +117,11 @@ void rsaKeyGen(keyInfo *key, unsigned long exponent, int keySize)
 
     // clean
     BN_free(gcd);
-    //BN_free(g);
+    BN_free(g);
 }
 
-// simple test for small numbers
+// simple test for small numbers 
+// (not used for RSA key-pair generation)
 bool isPrime(unsigned long n)
 {
     if (n == 2 || n == 3)
