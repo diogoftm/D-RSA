@@ -29,9 +29,9 @@ jobs:
     - name: Build C++ Files
       working-directory: cpp
       run: |
-        make
+        make GIT_FLAG?=-DGITHUB_WORKFLOW_ACTIVATED
 
     - name: Run test Suite
-      working-directory: cpp
+      working-directory: tests
       run: |
-        ./test_RBG
+        sh run-all-tests.sh

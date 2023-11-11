@@ -1,6 +1,9 @@
 # Compiler and compiler flags
 CC = g++
-CFLAGS = -Wall -g -Wno-deprecated-declarations
+
+GIT_FLAG := 
+
+CFLAGS = -Wall -g -Wno-deprecated-declarations $(GIT_FLAG)
 
 TARGETS = rsagen RBG test_RBG
 

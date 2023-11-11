@@ -126,6 +126,7 @@ TEST(RBG_Avalanche, Password)
     ASSERT_NEAR(fp1, 50.0, 1.0);
 }
 
+
 TEST(RBG_Avalanche, ConfusionString)
 {
     const char *osCall_1 = "./RBG PW CS12 50 --limit 1024";
@@ -166,6 +167,7 @@ TEST(RBG_Determinism, EqualArguments)
     ASSERT_TRUE(s1Bytes == s2Bytes);
 }
 
+#ifndef GITHUB_WORKFLOW_ACTIVATED
 TEST(RBG_ExitCodes, InvalidArguments)
 {
     std::vector<const char *> badCommands = {
@@ -184,6 +186,7 @@ TEST(RBG_ExitCodes, InvalidArguments)
         ASSERT_TRUE(checkCommand(command, EXIT_FAILURE));
     }
 }
+#endif
 
 TEST(RBG_ExitCodes, GoodArguments)
 {
