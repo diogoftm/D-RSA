@@ -77,24 +77,26 @@ def collectDataFromConfig(config):
             "iterations" : [],
             "time" : [],
         }
-        citer = findCurrentIteration(minIterations,maxIterations,currentStep,numSteps)
-        command = f"./cpp/RBG PW CS {citer} --limit 1"
 
-        start_time = monotonic()
+        while currentStep < numSteps:
+            citer = findCurrentIteration(minIterations,maxIterations,currentStep,numSteps)
+            command = f"./cpp/RBG PW CS {citer} --limit 1"
 
-        subprocess.run(
-            command,
-            shell=True
-        )
+            start_time = monotonic()
 
-        end_time = monotonic()
+            subprocess.run(
+                command,
+                shell=True
+            )
 
-        diff = (end_time - start_time)
+            end_time = monotonic()
 
-        datasets["cpp"]["iterations"].append(citer)
-        datasets["cpp"]["time"].append(diff)
+            diff = (end_time - start_time)
 
-        currentStep += 1
+            datasets["cpp"]["iterations"].append(citer)
+            datasets["cpp"]["time"].append(diff)
+
+            currentStep += 1
 
 
     return datasets
