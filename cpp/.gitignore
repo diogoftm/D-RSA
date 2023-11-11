@@ -2,3 +2,5 @@
 RBG
 rsagen
 *.pem
+.vscode
+test_RBG

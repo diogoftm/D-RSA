@@ -73,7 +73,7 @@ void getOptionalArguments(OptionalArguments &args, int argc, char *argv[])
 void produceDataUntilLimit(Generator &generator, std::optional<int> limit)
 {
     uint8_t block[1024];
-    int bytesWritten = 0, bytesToWrite, missingBytes;
+    int bytesWritten = 0, bytesToWrite = 0, missingBytes = 0;
 
     while (!limit.has_value() || bytesToWrite < limit.value())
     {
@@ -89,6 +89,7 @@ void produceDataUntilLimit(Generator &generator, std::optional<int> limit)
         fwrite(block, sizeof(uint8_t), bytesToWrite, stdout);
         bytesWritten += bytesToWrite;
     }
+
 }
 
 int main(int argc, char *argv[])
@@ -99,7 +100,6 @@ int main(int argc, char *argv[])
 
     try
     {
-
         getGeneratorArgsFromArgs(args, argc, argv);
         getOptionalArguments(optionalArgs, argc, argv);
     }
