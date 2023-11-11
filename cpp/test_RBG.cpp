@@ -186,7 +186,6 @@ TEST(RBG_ExitCodes, InvalidArguments)
         ASSERT_TRUE(checkCommand(command, EXIT_FAILURE));
     }
 }
-#endif
 
 TEST(RBG_ExitCodes, GoodArguments)
 {
@@ -200,6 +199,8 @@ TEST(RBG_ExitCodes, GoodArguments)
         ASSERT_TRUE(checkCommand(command, EXIT_SUCCESS));
     }
 }
+#endif
+
 
 int main(int argc, char **argv)
 {
