@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import matplotlib.pyplot as plt
 from time import monotonic
 import subprocess
-
+import tqdm
 
 def printUsage():
     print(
@@ -82,14 +82,15 @@ def collectDataFromConfig(config):
             citer = findCurrentIteration(minIterations,maxIterations,currentStep,numSteps)
             command = f"./cpp/RBG PW CS {citer} --limit 1"
 
-            start_time = monotonic()
 
-            subprocess.run(
-                command,
-                shell=True
-            )
-
-            end_time = monotonic()
+            with open('/dev/null', 'w') as devnull:
+                start_time = monotonic()
+                subprocess.run(
+                    command,
+                    shell=True,
+                    stdout=devnull
+                )
+                end_time = monotonic()
 
             diff = (end_time - start_time)
 
@@ -97,6 +98,8 @@ def collectDataFromConfig(config):
             datasets["cpp"]["time"].append(diff)
 
             currentStep += 1
+
+            print(f"cpp {currentStep}/{numSteps} data generated")
 
 
     return datasets
