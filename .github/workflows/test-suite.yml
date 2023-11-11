@@ -1,0 +1,37 @@
+name: Run All Tests
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out the code
+      uses: actions/checkout@v2
+
+    - name: Set up OpenSSL libraries
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libssl-dev  # Install OpenSSL development package
+      if: startsWith(matrix.config.runner, 'ubuntu-')
+
+    - name: Install gtest
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgtest-dev
+
+
+    - name: Build C++ Files
+      working-directory: cpp
+      run: |
+        make
+
+    - name: Run test Suite
+      working-directory: tests
+      run: |
+        sh run-all-tests.sh
