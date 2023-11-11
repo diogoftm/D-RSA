@@ -53,7 +53,7 @@ void Generator::seekNextBytesFromGenerator(uint8_t *out, int blockLength)
     } while (encryptedBytes < blockLength);
 }
 
-void Generator::generatePattern(Pattern &pattern, const std::string &const confusionString)
+void Generator::generatePattern(Pattern &pattern, const std::string& confusionString)
 {
 
     unsigned int patternSize = PatternBytes;

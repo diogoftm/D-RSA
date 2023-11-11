@@ -53,7 +53,7 @@ class Generator {
         void findNextSeedByPattern(const Pattern& pattern, Seed& seed);
         void seekNextBytesFromGenerator(uint8_t* out, int nbytes);
         
-        static void generatePattern(Pattern& pattern, const std::string& const confusionString);
+        static void generatePattern(Pattern& pattern, const std::string& confusionString);
 
         inline void calculateSeed(Seed& outSeed, const SHA256Result& result, const LeadingPatternBytes& leadingBytes);
         GeneratorArgs args;

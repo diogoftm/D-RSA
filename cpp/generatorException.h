@@ -12,6 +12,8 @@ std::string generatorExceptionTypesRepr(GeneratorExceptionTypes type) {
         case GENERATOR_SETUP_ERROR: return "Generator Setup Error";
         case GENERATOR_RUNTIME_ERROR: return "Generator Runtime Error";
     }
+
+    return "";
 }
 
 class GeneratorException : public std::exception {
