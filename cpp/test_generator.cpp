@@ -1,0 +1,66 @@
+#include <gtest/gtest.h>
+#include "generator.h"
+
+class GeneratorTest : public Generator
+{
+public:
+    using Generator::calculateSeed;
+    using Generator::generatePattern;
+    using Generator::LeadingPatternBytes;
+    using Generator::Pattern;
+    using Generator::Seed;
+    using Generator::SHA256Result;
+
+    GeneratorTest(GeneratorArgs &args) : Generator(args) {}
+};
+
+TEST(Generator, generatePattern)
+{
+
+    GeneratorTest::Pattern pattern;
+    std::string confusionString = "confusion_string";
+
+    GeneratorTest::generatePattern(pattern, confusionString);
+
+    uint8_t expectedHashFirstBytes[] = {0xcb, 0xe2, 0x64, 0xcf, 0xe1, 0x62, 0xe1, 0x80};
+
+    for (unsigned int i = 0; i < PatternBytes && i < sizeof(expectedHashFirstBytes); i++)
+    {
+        ASSERT_TRUE(pattern.bytes[i] == expectedHashFirstBytes[i]);
+    }
+}
+
+TEST(Generator, calculateSeed)
+{
+    GeneratorTest::Seed result;
+    GeneratorTest::SHA256Result digest;
+    GeneratorTest::LeadingPatternBytes leadingBytes;
+    GeneratorTest::Seed expectedResult;
+
+    digest = {
+        0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
+        0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54, 0x32, 0x10,
+        0xA0, 0xB1, 0xC2, 0xD3, 0xE4, 0xF5, 0x06, 0x17,
+        0x28, 0x39, 0x4A, 0x5B, 0x6C, 0x7D, 0x8E, 0x9F};
+
+    leadingBytes = {
+        0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88,
+        0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00,
+        0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+        0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10};
+
+    expectedResult = {
+        0x65, 0x94, 0x3c, 0x72, 0x7c, 0x0a, 0x54, 0x16, 0x43, 0x63, 0xe2, 0x3f, 0x62, 0x2b, 0xc9, 0x35,
+        0xed, 0xa9, 0x6f, 0xb4, 0x16, 0x07, 0xfb, 0xcb, 0xce, 0x93, 0x70, 0x4a, 0xc1, 0x1c, 0xc1, 0xdf};
+
+    GeneratorTest::calculateSeed(result, digest, leadingBytes);
+
+    for (unsigned int i = 0; i < sizeof(GeneratorTest::Seed); i++)
+        ASSERT_EQ(result.bytes[i], expectedResult.bytes[i]);
+}
+
+int main(int argc, char **argv)
+{
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}

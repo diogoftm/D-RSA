@@ -1,6 +1,7 @@
 #include "generator.h"
 #include "generatorException.h"
-
+#include <stdio.h>
+#include <cstring>
 
 Generator::Generator(GeneratorArgs args)
 {
@@ -16,7 +17,7 @@ void Generator::setup()
 
     findBootstrapSeed(this->args, bootstrapSeed);
 
-    generatePattern(pattern, this->args.CS);
+    Generator::generatePattern(pattern, this->args.CS);
 
     initializeGenerator(bootstrapSeed);
 
@@ -28,8 +29,6 @@ void Generator::setup()
 
     setupDone = true;
 }
-
-
 
 void Generator::nextBlock(uint8_t *block, int blockLength)
 {
@@ -53,17 +52,33 @@ void Generator::seekNextBytesFromGenerator(uint8_t *out, int blockLength)
     } while (encryptedBytes < blockLength);
 }
 
-void Generator::generatePattern(Pattern &pattern, const std::string& confusionString)
+void Generator::generatePattern(Pattern &pattern, std::string confusionString)
 {
-
     unsigned int patternSize = PatternBytes;
+    uint8_t BUFF[32];
+    int strsize = confusionString.length();
     EVP_MD_CTX *ctx = EVP_MD_CTX_new();
 
-    EVP_DigestInit_ex(ctx, EVP_sha256(), NULL);
-    EVP_DigestUpdate(ctx, confusionString.c_str(), confusionString.length());
-    EVP_DigestFinal_ex(ctx, &pattern.bytes[0], &patternSize);
+    if (ctx != nullptr)
+    {
+        if (EVP_DigestInit_ex(ctx, EVP_sha256(), nullptr) == 1 &&
+            EVP_DigestUpdate(ctx, confusionString.c_str(), strsize) == 1 &&
+            EVP_DigestFinal_ex(ctx, BUFF, &patternSize) == 1)
+        {
 
-    EVP_MD_CTX_free(ctx);
+            memcpy(pattern.bytes, BUFF, PatternBytes);
+        }
+        else
+        {
+            throw GeneratorException("Error in OpenSSL functions", GeneratorExceptionTypes::GENERATOR_SETUP_ERROR);
+        }
+
+        EVP_MD_CTX_free(ctx);
+    }
+    else
+    {
+        throw GeneratorException("Error creating EVP_MD_CTX", GeneratorExceptionTypes::GENERATOR_SETUP_ERROR);
+    }
 }
 
 void Generator::findBootstrapSeed(const GeneratorArgs &args, Seed &seed)
@@ -92,7 +107,8 @@ void Generator::initializeGenerator(Seed &seed)
         throw GeneratorException("Error while initializing generator", GeneratorExceptionTypes::GENERATOR_SETUP_ERROR);
 }
 
-void Generator::calculateSeed(Seed& outSeed, const SHA256Result& hashResult, const LeadingPatternBytes& leadingBytes) {
+void Generator::calculateSeed(Seed &outSeed, const SHA256Result &hashResult, const LeadingPatternBytes &leadingBytes)
+{
     auto ctx = EVP_MD_CTX_new();
 
     EVP_DigestInit(ctx, EVP_sha256());
@@ -114,24 +130,24 @@ void Generator::findNextSeedByPattern(const Pattern &pattern, Seed &seed)
     LeadingPatternBytes leading;
 
     this->seekNextBytesFromGenerator(&B0, 1);
-    
-    for(;;) {
+
+    for (;;)
+    {
         this->seekNextBytesFromGenerator(&B1, 1);
 
-        if(pattern.bytes[0] == B0 && pattern.bytes[1] == B1) {
+        if (pattern.bytes[0] == B0 && pattern.bytes[1] == B1)
+        {
             EVP_DigestFinal(mdCtx, result.bytes, NULL);
-            
+
             this->seekNextBytesFromGenerator(leading.bytes, 32);
-            this->calculateSeed(seed, result, leading);
+            Generator::calculateSeed(seed, result, leading);
             EVP_MD_CTX_free(mdCtx);
             return;
-
-        } else {
+        }
+        else
+        {
             EVP_DigestUpdate(mdCtx, &B0, 1);
             B0 = B1;
         }
     }
-
-
 }
- 

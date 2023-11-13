@@ -5,13 +5,13 @@ GIT_FLAG :=
 
 CFLAGS = -Wall -g -Wno-deprecated-declarations $(GIT_FLAG)
 
-TARGETS = rsagen RBG test_RBG
+TARGETS = rsagen RBG test_RBG test_generator
 
 OPENSSL = -lssl -lcrypto
 
 GTEST = -lgtest -lgtest_main
 
-SRCS = generator.cpp rsagen.cpp RBG.cpp test_RBG.cpp
+SRCS = generator.cpp rsagen.cpp RBG.cpp test_RBG.cpp test_generator.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 
@@ -25,6 +25,9 @@ RBG: generator.o RBG.o
 
 test_RBG: test_RBG.o
 	$(CC) $(CFLAGS) -o test_RBG test_RBG.o $(GTEST)
+
+test_generator: test_generator.o
+	$(CC) $(CFLAGS) -o test_generator test_generator.o generator.o $(GTEST) $(OPENSSL)
 
 %.o: %.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
