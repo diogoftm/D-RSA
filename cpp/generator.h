@@ -53,6 +53,9 @@ protected:
     void seekNextBytesFromGenerator(uint8_t *out, int nbytes);
 
     static void generatePattern(Pattern &pattern, const std::string confusionString);
+    static int getArgon2MemoryUsageByIC(int IC);
+    static int getArgon2IterationsByIC(int IC);
+    static void setArgon2Salt(unsigned char* salt, const char* CS, int IC);
 
     static void calculateSeed(Seed &outSeed, const SHA256Result &result, const LeadingPatternBytes &leadingBytes);
     GeneratorArgs args;

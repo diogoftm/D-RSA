@@ -2,10 +2,16 @@
 #include "generatorException.h"
 #include <stdio.h>
 #include <cstring>
+#include <sodium.h>
+#include <math.h>
 
 Generator::Generator(GeneratorArgs args)
 {
     this->args = args;
+
+    if(sodium_init() < 0)
+        throw GeneratorException("Unable to initialize sodium", GeneratorExceptionTypes::GENERATOR_SETUP_ERROR);
+
 }
 
 uint8_t const Generator::zerosArray[4096] = {0};
@@ -83,17 +89,44 @@ void Generator::generatePattern(Pattern &pattern, std::string confusionString)
 
 void Generator::findBootstrapSeed(const GeneratorArgs &args, Seed &seed)
 {
-    if (PKCS5_PBKDF2_HMAC(
-            args.PW.c_str(),
-            args.PW.length(), (unsigned char *)this->args.CS.c_str(),
-            this->args.CS.length(),
-            args.IC,
-            EVP_sha256(),
-            sizeof(seed),
-            seed.bytes) != 1)
-    {
-        throw GeneratorException("Error while calculating PBKDF2", GeneratorExceptionTypes::GENERATOR_SETUP_ERROR);
+
+    int memoryUsage = getArgon2MemoryUsageByIC(args.IC);
+    int iterations = getArgon2IterationsByIC(args.IC);
+    
+    unsigned char salt[crypto_pwhash_argon2i_SALTBYTES];
+
+    setArgon2Salt(salt, args.CS.c_str(), args.IC);
+
+    const char* PW = args.PW.c_str();
+    const int PW_Len = strlen(PW);
+    
+    int status = crypto_pwhash_argon2i(
+        seed.bytes, sizeof(seed.bytes),
+        PW, PW_Len,
+        salt,
+        iterations, memoryUsage,
+        crypto_pwhash_argon2i_ALG_ARGON2I13);
+
+    if (status != 0) {
+        throw GeneratorException("Error while calculating Argon2 Bootstrap Seed", GeneratorExceptionTypes::GENERATOR_SETUP_ERROR);
     }
+}
+
+void Generator::setArgon2Salt(unsigned char* salt, const char* CS, int IC) {
+
+    auto ctx = EVP_MD_CTX_new();
+
+    uint8_t digest[32];
+
+    EVP_DigestInit(ctx, EVP_sha256());
+    EVP_DigestUpdate(ctx,CS, strlen(CS));
+    EVP_DigestUpdate(ctx, &IC, 4);
+
+    unsigned int mdLen;
+    EVP_DigestFinal(ctx,digest, &mdLen);
+    EVP_MD_CTX_free(ctx);
+
+    memcpy(salt, digest, crypto_pwhash_argon2i_SALTBYTES);
 }
 
 void Generator::initializeGenerator(Seed &seed)
@@ -150,4 +183,26 @@ void Generator::findNextSeedByPattern(const Pattern &pattern, Seed &seed)
             B0 = B1;
         }
     }
+}
+
+
+int Generator::getArgon2MemoryUsageByIC(int IC) {
+    
+    return 1024 * 1024 * 1024;
+}
+
+int Generator::getArgon2IterationsByIC(int IC) {
+
+    static int minIterations = 1;
+    static int maxIterations = 10;
+
+    int usedIterations = minIterations + (int)((maxIterations - (double)minIterations) * (log10(IC) / 4.0));
+
+    if(minIterations <= usedIterations && usedIterations <= maxIterations)
+        return usedIterations;
+
+    if(usedIterations < minIterations)
+        return minIterations;
+    
+    return maxIterations;
 }
