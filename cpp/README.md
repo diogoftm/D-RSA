@@ -7,6 +7,12 @@
 - rsagen.cpp - generate a RSA key-pair and save it in two PEM formated files (private and public);
 - test_keys.sh - test RSA key by encrypting a message with the public key and then decrypting with the private.
 
+## Dependecies
+
+```
+sudo apt-get install libsodium-dev openssl
+```
+
 ## rsagen
 ### Compile
 ```

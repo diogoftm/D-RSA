@@ -180,7 +180,7 @@ func main() {
 	}
 
 	// Public key to PEM
-	publicKeyPEM, err := x509.MarshalPKIXPublicKey(&keyPair.PublicKey)
+	publicKeyPEM := x509.MarshalPKCS1PublicKey(&keyPair.PublicKey)
 	if err != nil {
 		fmt.Println("Error marshaling public key:", err)
 		return
@@ -194,7 +194,7 @@ func main() {
 	defer publicKeyFile.Close()
 
 	err = pem.Encode(publicKeyFile, &pem.Block{
-		Type:  "PUBLIC KEY",
+		Type:  "RSA PUBLIC KEY",
 		Bytes: publicKeyPEM,
 	})
 	if err != nil {
