@@ -50,17 +50,13 @@ func (g *Generator) Setup() {
 	var pattern Pattern
 
 	g.findBootstrapSeed(&bootstrapSeed)
-
 	g.generatePattern(&pattern, g.args.CS)
-
 	g.initializeGenerator(&bootstrapSeed)
 
 	for i := uint16(0); i < g.args.IC; i++ {
 		g.findNextSeedByPattern(&pattern, &iterationSeed)
 		g.initializeGenerator(&iterationSeed)
 	}
-
-	//binary.Write(os.Stdout, binary.NativeEndian, iterationSeed[:])
 
 	g.setupDone = true
 }
@@ -95,7 +91,8 @@ func (g *Generator) findBootstrapSeed(seed *Seed) {
 	salt := make([]byte, 16)
 	g.setArgon2Salt(salt, g.args.CS, int(g.args.IC))
 
-	hashedPW := argon2.IDKey([]byte(g.args.PW), salt, uint32(iterations), 64*1024, 4, 32)
+	hashedPW := argon2.Key([]byte(g.args.PW), salt, uint32(iterations), 64*1024, 1, 32)
+
 	copy(seed[:], hashedPW)
 }
 
@@ -136,25 +133,27 @@ func (g *Generator) findNextSeedByPattern(pattern *Pattern, seed *Seed) {
 	leadingBytes := make([]byte, 32)
 
 	g.seekNextBytesFromGenerator(B0)
+
 	var result SHA256Result
 
 	for {
 		g.seekNextBytesFromGenerator(B1)
-		if pattern[0] == B0[0] {
+
+		if pattern[0] == B0[0] && pattern[1] == B1[0] {
 			copy(result[:], h.Sum(nil))
 			g.seekNextBytesFromGenerator(leadingBytes)
 			g.calculateSeed(seed, &result, (*LeadingPatternBytes)(leadingBytes))
 			break
 		} else {
 			h.Write(B0)
-			B0 = B1
+			B0[0] = B1[0]
 		}
 	}
 }
 
 func (g *Generator) getArgon2IterationsByIC(IC int) int {
-	minIterations := 1
-	maxIterations := 10
+	minIterations := 3
+	maxIterations := 6
 
 	usedIterations := minIterations + int((float64(maxIterations-minIterations))*(math.Log10(float64(IC))/4.0))
 
@@ -222,9 +221,9 @@ func main() {
 	blockSize := 1024
 
 	for {
-		if nBytesGenerated == limit {
+		if nBytesGenerated == limit && limit != 0 {
 			break
-		} else if limit-nBytesGenerated < blockSize {
+		} else if limit-nBytesGenerated < blockSize && limit != 0 {
 			blockSize = limit - nBytesGenerated
 		}
 		block := make([]byte, blockSize)

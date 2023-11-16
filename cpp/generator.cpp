@@ -102,8 +102,6 @@ void Generator::findBootstrapSeed(const GeneratorArgs &args, Seed &seed)
     const char* PW = args.PW.c_str();
     const int PW_Len = strlen(PW);
 
-    std::cout << PW << "---> PW\n";
-
     int status = argon2_hash(
         iterations, memoryUsage, 1,
         PW, PW_Len,
