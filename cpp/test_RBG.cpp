@@ -107,8 +107,10 @@ bool checkCommand(const char *command, int expectedExitCode)
     }
 }
 
-void runWithTimeout()
-{
+TEST(RBG_Edge_Case, LowIterations) {
+    const char *osCall = "./RBG ABCDEF12 CS 1 --limit 1024";
+    ASSERT_TRUE(checkCommand(osCall,EXIT_SUCCESS));
+
 }
 
 TEST(RBG_Avalanche, Password)

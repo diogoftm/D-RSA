@@ -193,8 +193,8 @@ int Generator::getArgon2MemoryUsageByIC(int IC) {
 
 int Generator::getArgon2IterationsByIC(int IC) {
 
-    static int minIterations = 1;
-    static int maxIterations = 10;
+    static int minIterations = crypto_pwhash_argon2i_OPSLIMIT_MIN;
+    static int maxIterations = crypto_pwhash_argon2i_OPSLIMIT_MODERATE;
 
     int usedIterations = minIterations + (int)((maxIterations - (double)minIterations) * (log10(IC) / 4.0));
 
