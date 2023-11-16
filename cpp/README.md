@@ -10,7 +10,7 @@
 ## Dependecies
 
 ```
-sudo apt-get install libsodium-dev openssl
+sudo apt-get install libsodium-dev openssl libargon2-0-dev
 ```
 
 ## rsagen

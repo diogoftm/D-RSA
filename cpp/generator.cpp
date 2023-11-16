@@ -1,9 +1,11 @@
 #include "generator.h"
 #include "generatorException.h"
 #include <stdio.h>
+#include <argon2.h>
 #include <cstring>
 #include <sodium.h>
 #include <math.h>
+#include <iostream>
 
 Generator::Generator(GeneratorArgs args)
 {
@@ -22,6 +24,11 @@ void Generator::setup()
     Pattern pattern;
 
     findBootstrapSeed(this->args, bootstrapSeed);
+
+    // debug
+    for(uint8_t b : bootstrapSeed.bytes)
+        std::cout << b;
+    std::cout << "---> bootstrapSeed\n";
 
     Generator::generatePattern(pattern, this->args.CS);
 
@@ -93,19 +100,39 @@ void Generator::findBootstrapSeed(const GeneratorArgs &args, Seed &seed)
     int memoryUsage = getArgon2MemoryUsageByIC(args.IC);
     int iterations = getArgon2IterationsByIC(args.IC);
     
+    // debug
+    std::cout << iterations << "---> argonIterations\n";
+
     unsigned char salt[crypto_pwhash_argon2i_SALTBYTES];
 
     setArgon2Salt(salt, args.CS.c_str(), args.IC);
 
+    // debug
+    for(char b : salt)
+        std::cout << b;
+    std::cout << "---> argonSalt\n";
+
     const char* PW = args.PW.c_str();
     const int PW_Len = strlen(PW);
-    
+
+    std::cout << PW << "---> PW\n";
+
+    /*
     int status = crypto_pwhash_argon2i(
         seed.bytes, sizeof(seed.bytes),
         PW, PW_Len,
         salt,
         iterations, memoryUsage,
         crypto_pwhash_argon2i_ALG_ARGON2I13);
+    */
+
+    int status = argon2_hash(
+        iterations, memoryUsage, 1,
+        PW, PW_Len,
+        salt, 16,
+        seed.bytes, sizeof(seed.bytes),
+        nullptr, 0,
+        Argon2_i, ARGON2_VERSION_NUMBER);
 
     if (status != 0) {
         throw GeneratorException("Error while calculating Argon2 Bootstrap Seed", GeneratorExceptionTypes::GENERATOR_SETUP_ERROR);
@@ -188,7 +215,7 @@ void Generator::findNextSeedByPattern(const Pattern &pattern, Seed &seed)
 
 int Generator::getArgon2MemoryUsageByIC(int IC) {
     
-    return 1024 * 1024 * 1024;
+    return 64*1024;
 }
 
 int Generator::getArgon2IterationsByIC(int IC) {

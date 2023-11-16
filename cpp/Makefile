@@ -7,7 +7,7 @@ CFLAGS = -Wall -g -Wno-deprecated-declarations $(GIT_FLAG)
 
 TARGETS = rsagen RBG test_RBG test_generator
 
-OPENSSL = -lssl -lcrypto -lsodium
+OPENSSL = -lssl -lcrypto -lsodium -largon2
 
 GTEST = -lgtest -lgtest_main
 
