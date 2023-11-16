@@ -25,11 +25,6 @@ void Generator::setup()
 
     findBootstrapSeed(this->args, bootstrapSeed);
 
-    // debug
-    for(uint8_t b : bootstrapSeed.bytes)
-        std::cout << b;
-    std::cout << "---> bootstrapSeed\n";
-
     Generator::generatePattern(pattern, this->args.CS);
 
     initializeGenerator(bootstrapSeed);
@@ -99,32 +94,15 @@ void Generator::findBootstrapSeed(const GeneratorArgs &args, Seed &seed)
 
     int memoryUsage = getArgon2MemoryUsageByIC(args.IC);
     int iterations = getArgon2IterationsByIC(args.IC);
-    
-    // debug
-    std::cout << iterations << "---> argonIterations\n";
 
     unsigned char salt[crypto_pwhash_argon2i_SALTBYTES];
 
     setArgon2Salt(salt, args.CS.c_str(), args.IC);
 
-    // debug
-    for(char b : salt)
-        std::cout << b;
-    std::cout << "---> argonSalt\n";
-
     const char* PW = args.PW.c_str();
     const int PW_Len = strlen(PW);
 
     std::cout << PW << "---> PW\n";
-
-    /*
-    int status = crypto_pwhash_argon2i(
-        seed.bytes, sizeof(seed.bytes),
-        PW, PW_Len,
-        salt,
-        iterations, memoryUsage,
-        crypto_pwhash_argon2i_ALG_ARGON2I13);
-    */
 
     int status = argon2_hash(
         iterations, memoryUsage, 1,
@@ -214,7 +192,6 @@ void Generator::findNextSeedByPattern(const Pattern &pattern, Seed &seed)
 
 
 int Generator::getArgon2MemoryUsageByIC(int IC) {
-    
     return 64*1024;
 }
 
