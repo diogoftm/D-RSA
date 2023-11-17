@@ -15,8 +15,12 @@ import (
 
 const (
 	ZEROS_ARRAY_SIZE = 4096
-	PatternBytes     = 2
+	UsageStr         = `Usage: %s <password> <confusion string> <iteration count> [--limit]\n
+	--limit: number of bytes to be generated (default: no limit).\n
+	--patternBytes: number of pattern bytes (default: 2).`
 )
+
+var PatternBytes int
 
 type GeneratorArgs struct {
 	PW string
@@ -31,7 +35,6 @@ type Generator struct {
 }
 
 type Seed [32]byte
-type Pattern [PatternBytes]byte
 type SHA256Result [32]byte
 type LeadingPatternBytes [32]byte
 
@@ -47,14 +50,14 @@ var zerosArray [ZEROS_ARRAY_SIZE]byte
 
 func (g *Generator) Setup() {
 	var bootstrapSeed, iterationSeed Seed
-	var pattern Pattern
+	var pattern = make([]byte, PatternBytes)
 
 	g.findBootstrapSeed(&bootstrapSeed)
 	g.generatePattern(&pattern, g.args.CS)
 	g.initializeGenerator(&bootstrapSeed)
 
 	for i := uint16(0); i < g.args.IC; i++ {
-		g.findNextSeedByPattern(&pattern, &iterationSeed)
+		g.findNextSeedByPattern(pattern, &iterationSeed)
 		g.initializeGenerator(&iterationSeed)
 	}
 
@@ -76,13 +79,13 @@ func (g *Generator) seekNextBytesFromGenerator(out []byte) {
 	g.cipher.XORKeyStream(out, zerosArray)
 }
 
-func (g *Generator) generatePattern(pattern *Pattern, confusionString string) {
+func (g *Generator) generatePattern(pattern *[]byte, confusionString string) {
 	h := sha256.New()
 
 	h.Write([]byte(confusionString))
 	hashed := h.Sum(nil)
 
-	copy(pattern[:], hashed[:PatternBytes])
+	*pattern = hashed[:PatternBytes]
 }
 
 func (g *Generator) findBootstrapSeed(seed *Seed) {
@@ -126,7 +129,7 @@ func (g *Generator) calculateSeed(outSeed *Seed, hashResult *SHA256Result, leadi
 	copy(outSeed[:], h.Sum(nil))
 }
 
-func (g *Generator) findNextSeedByPattern(pattern *Pattern, seed *Seed) {
+func (g *Generator) findNextSeedByPattern(pattern []byte, seed *Seed) {
 	h := sha256.New()
 	B := make([]byte, 1)
 	previousBytes := make([]byte, PatternBytes)
@@ -184,9 +187,10 @@ func main() {
 	var err error
 	var limit int
 
+	PatternBytes = 2
+
 	if len(os.Args) < 4 {
-		fmt.Printf("Usage: %s <password> <confusion string> <iteration count> [--limit]\n", os.Args[0])
-		fmt.Println("--limit: number of bytes to be generated.")
+		fmt.Printf(UsageStr, os.Args[0])
 		os.Exit(1)
 	} else {
 		password = os.Args[1]
@@ -199,20 +203,21 @@ func main() {
 		}
 		iterationCount = uint16(val)
 
-		if len(os.Args) > 6 {
-			fmt.Fprintln(os.Stderr, "Error: too many arguments.")
-			os.Exit(1)
-		} else if len(os.Args) == 6 {
-			if os.Args[4] == "--limit" {
-				limit, err = strconv.Atoi(os.Args[5])
+		for i := 4; i < len(os.Args); i += 2 {
+			if os.Args[i] == "--limit" {
+				limit, err = strconv.Atoi(os.Args[i+1])
 				if err != nil || limit <= 0 {
-					fmt.Println("")
 					fmt.Fprintln(os.Stderr, "Error: Invalid exponent value.")
 					os.Exit(1)
 				}
+			} else if os.Args[i] == "--patternBytes" {
+				PatternBytes, err = strconv.Atoi(os.Args[i+1])
+				if err != nil || PatternBytes <= 0 {
+					fmt.Fprintln(os.Stderr, "Error: Invalid number of pattern bytes.")
+					os.Exit(1)
+				}
 			} else {
-				fmt.Println()
-				fmt.Fprintln(os.Stderr, "Inavlid flag: ", os.Args[4])
+				fmt.Fprintln(os.Stderr, "Inavlid argument: ", os.Args[i])
 				os.Exit(1)
 			}
 		}
