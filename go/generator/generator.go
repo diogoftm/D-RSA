@@ -15,7 +15,7 @@ import (
 
 const (
 	ZEROS_ARRAY_SIZE = 4096
-	PatternBytes     = 3
+	PatternBytes     = 2
 )
 
 type GeneratorArgs struct {
