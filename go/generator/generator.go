@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	PatternBytes     = 2
 	ZEROS_ARRAY_SIZE = 4096
+	PatternBytes     = 3
 )
 
 type GeneratorArgs struct {
@@ -128,26 +128,37 @@ func (g *Generator) calculateSeed(outSeed *Seed, hashResult *SHA256Result, leadi
 
 func (g *Generator) findNextSeedByPattern(pattern *Pattern, seed *Seed) {
 	h := sha256.New()
-	B0 := make([]byte, 1)
-	B1 := make([]byte, 1)
+	B := make([]byte, 1)
+	previousBytes := make([]byte, PatternBytes)
 	leadingBytes := make([]byte, 32)
 
-	g.seekNextBytesFromGenerator(B0)
+	g.seekNextBytesFromGenerator(previousBytes)
 
 	var result SHA256Result
 
-	for {
-		g.seekNextBytesFromGenerator(B1)
+	equalCheck := true
 
-		if pattern[0] == B0[0] && pattern[1] == B1[0] {
+	for {
+		equalCheck = true
+		for i := range pattern {
+			if pattern[i] != previousBytes[i] {
+				equalCheck = false
+				break
+			}
+		}
+
+		if equalCheck {
 			copy(result[:], h.Sum(nil))
 			g.seekNextBytesFromGenerator(leadingBytes)
 			g.calculateSeed(seed, &result, (*LeadingPatternBytes)(leadingBytes))
 			break
 		} else {
-			h.Write(B0)
-			B0[0] = B1[0]
+			a := make([]byte, 1)
+			a[0] = previousBytes[0]
+			h.Write(a)
 		}
+		g.seekNextBytesFromGenerator(B)
+		previousBytes = append(previousBytes[1:], B[0])
 	}
 }
 
