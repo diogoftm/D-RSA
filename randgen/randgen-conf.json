@@ -2,10 +2,10 @@
   "plots": {
     "minIterations" : 10,
     "maxIterations" : 5000,
-    "numSteps" : 20
+    "numSteps" : 8
   },
   "implementation": {
     "cpp" : true,
-    "go" : false
+    "go" : true
   }
 }

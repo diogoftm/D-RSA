@@ -109,7 +109,7 @@ def collectDataFromConfig(config):
         
         while currentStep < numSteps:
             citer = findCurrentIteration(minIterations,maxIterations,currentStep,numSteps)
-            command = f"./../cpp/RBG PW CS {citer} --limit 1"
+            command = f"./../go/generator/generator PW CS {citer} --limit 1"
 
             with open('/dev/null') as devnull:
                 start_time = monotonic()

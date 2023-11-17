@@ -3,7 +3,7 @@ CC = g++
 
 GIT_FLAG := 
 
-CFLAGS = -Wall -g -Wno-deprecated-declarations $(GIT_FLAG)
+CFLAGS = -Wall -g -Wno-deprecated-declarations $(GIT_FLAG) -O3
 
 TARGETS = rsagen RBG test_RBG test_generator
 
