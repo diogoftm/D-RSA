@@ -15,5 +15,6 @@ if [ "$output1" = "$output2" ]; then
     echo "C++ and Go generator produce equal output"
     exit 0
 else
+    echo "C++ and Go generator produce distinct output"
     exit 1
 fi
