@@ -21,6 +21,7 @@ const (
 )
 
 var PatternBytes int
+var zerosArray []byte
 
 type GeneratorArgs struct {
 	PW string
@@ -45,8 +46,6 @@ func NewGenerator(args GeneratorArgs) *Generator {
 		cipher:    nil,
 	}
 }
-
-var zerosArray [ZEROS_ARRAY_SIZE]byte
 
 func (g *Generator) Setup() {
 	var bootstrapSeed, iterationSeed Seed
@@ -75,7 +74,9 @@ func (g *Generator) NextBlock(block []byte) error {
 }
 
 func (g *Generator) seekNextBytesFromGenerator(out []byte) {
-	zerosArray := make([]byte, len(out))
+	if zerosArray == nil || len(zerosArray) != len(out) {
+		zerosArray = make([]byte, len(out))
+	}
 	g.cipher.XORKeyStream(out, zerosArray)
 }
 
@@ -96,7 +97,7 @@ func (g *Generator) findBootstrapSeed(seed *Seed) {
 
 	hashedPW := argon2.Key([]byte(g.args.PW), salt, uint32(iterations), 1024*1024, 1, 32)
 
-	copy(seed[:], hashedPW)
+	*seed = Seed(hashedPW)
 }
 
 func (g *Generator) setArgon2Salt(salt []byte, CS string, IC int) {
