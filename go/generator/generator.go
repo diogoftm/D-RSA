@@ -239,7 +239,7 @@ func main() {
 		}
 		block := make([]byte, blockSize)
 		_ = gen.NextBlock(block)
-		binary.Write(os.Stdout, binary.NativeEndian, block[:])
+		binary.Write(os.Stdout, binary.LittleEndian, block[:])
 		nBytesGenerated += blockSize
 	}
 
