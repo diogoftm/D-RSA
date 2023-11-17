@@ -26,6 +26,10 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libsodium-dev
 
+    - name: Set argon2
+      run: |
+        sudo apt-get install -y libargon2-0-dev
+
     - name: Install gtest
       run: |
         sudo apt-get update
