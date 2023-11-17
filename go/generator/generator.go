@@ -91,7 +91,7 @@ func (g *Generator) findBootstrapSeed(seed *Seed) {
 	salt := make([]byte, 16)
 	g.setArgon2Salt(salt, g.args.CS, int(g.args.IC))
 
-	hashedPW := argon2.Key([]byte(g.args.PW), salt, uint32(iterations), 64*1024, 1, 32)
+	hashedPW := argon2.Key([]byte(g.args.PW), salt, uint32(iterations), 1024*1024, 1, 32)
 
 	copy(seed[:], hashedPW)
 }
