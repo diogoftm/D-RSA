@@ -190,7 +190,8 @@ void Generator::findNextSeedByPattern(const Pattern &pattern, Seed &seed)
 
 
 int Generator::getArgon2MemoryUsageByIC(int IC) {
-    return 64*1024;
+    return 1024*1024;
+    
 }
 
 int Generator::getArgon2IterationsByIC(int IC) {

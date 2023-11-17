@@ -67,13 +67,13 @@ def collectDataFromConfig(config):
     maxIterations = config["plots"]["maxIterations"]
     numSteps = config["plots"]["numSteps"]
 
-    currentStep = 0
-
     if config["implementation"]["cpp"] == True:
         datasets["cpp"] = {
             "iterations" : [],
             "time" : [],
         }
+
+        currentStep = 0
 
         while currentStep < numSteps:
             citer = findCurrentIteration(minIterations,maxIterations,currentStep,numSteps)
@@ -98,6 +98,36 @@ def collectDataFromConfig(config):
 
             print(f"cpp {currentStep}/{numSteps} data generated")
 
+    
+    if config["implementation"]["go"] == True:
+        datasets["go"] = {
+            "iterations" : [],
+            "time" : []
+        }
+
+        currentStep = 0
+        
+        while currentStep < numSteps:
+            citer = findCurrentIteration(minIterations,maxIterations,currentStep,numSteps)
+            command = f"./../cpp/RBG PW CS {citer} --limit 1"
+
+            with open('/dev/null') as devnull:
+                start_time = monotonic()
+                subprocess.run(
+                    command,
+                    shell=True,
+                    stdout=devnull
+                )
+                end_time = monotonic()
+
+            diff = (end_time - start_time)
+
+            datasets["go"]["iterations"].append(citer)
+            datasets["go"]["time"].append(diff)
+
+            currentStep += 1
+
+            print(f"go {currentStep}/{numSteps} data generated")
 
     return datasets
 
@@ -118,7 +148,7 @@ def generatePlotsFromDatasets(datasets):
 
     plt.xlabel("Number of iterations")
     plt.ylabel("Time to Setup")
-    plt.title("Time it takes to setup algorithm")
+    plt.title("Time it takes in seconds to setup algorithm")
 
     plt.legend()
     plt.show()
