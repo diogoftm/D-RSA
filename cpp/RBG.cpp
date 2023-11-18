@@ -2,74 +2,19 @@
 #include <stdexcept>
 #include "generator.h"
 #include <optional>
+#include <cstring>
 #include <string>
 
 #define MIN(A, B) A > B ? B : A
 
-const static char *usage = "usage: ./RBG password confusionString iterationCount [--limit nbytes]";
+const static char *usage = "usage: ./RBG password confusionString iterationCount [--limit nbytes] [--patternBytes nbytes]";
 
 struct OptionalArguments
 {
     std::optional<int> limit;
+    std::optional<int> patternBytes;
 };
 
-void getGeneratorArgsFromArgs(GeneratorArgs &args, int argc, char *argv[])
-{
-    if (argc != 4 && argc != 6)
-        throw std::invalid_argument("Invalid number of arguments");
-
-    std::string PW = std::string(argv[1]);
-    std::string CS = std::string(argv[2]);
-
-    int IC;
-    try
-    {
-        IC = std::stoi(argv[3]);
-    }
-    catch (std::exception &)
-    {
-        throw std::invalid_argument("Unable to convert iterationCount to an integer");
-    }
-
-    if (IC <= 0)
-        throw std::invalid_argument("iterationCount should be >= 1");
-
-    args.PW = PW;
-    args.CS = CS;
-    args.IC = IC;
-}
-
-void getOptionalArguments(OptionalArguments &args, int argc, char *argv[])
-{
-    if (argc == 4)
-    {
-        args.limit = std::nullopt;
-        return;
-    }
-
-    std::string limitString = "--limit";
-
-    if (limitString.compare(argv[4]))
-    {
-        throw std::invalid_argument("Unrecognized argument '" + std::string(argv[4]) + "'");
-    }
-
-    int limit;
-
-    try
-    {
-        limit = std::stoi(argv[5]);
-    }
-    catch (std::exception &)
-    {
-        throw std::invalid_argument("Unable to convert limit flag to an integer");
-    }
-
-    if (limit <= 0)
-        throw std::invalid_argument("limit flag should be >= 1");
-
-    args.limit = std::optional<int>(limit);
-}
 
 void produceDataUntilLimit(Generator &generator, std::optional<int> limit)
 {
@@ -95,6 +40,58 @@ void produceDataUntilLimit(Generator &generator, std::optional<int> limit)
     }
 }
 
+
+void parseArgs(int argc, char *argv[], GeneratorArgs &args, OptionalArguments &optionalArgs)
+{
+    if (argc < 4)
+        throw std::invalid_argument("Not enough arguments");
+
+    args.PW = argv[1];
+    args.CS = argv[2];
+
+    if (std::stoi(argv[3]) < 1)
+        throw std::invalid_argument("Invalid IC value");
+
+    args.IC = std::stoi(argv[3]);
+
+    for (int i = 4; i < argc; i++)
+    {
+        if (strcmp(argv[i], "--limit") == 0)
+        {
+            if (i + 1 >= argc)
+                throw std::invalid_argument("Missing argument for --limit");
+
+
+            if (std::stoi(argv[i + 1]) < 0)
+                throw std::invalid_argument("Invalid limit value");
+            optionalArgs.limit = std::stoi(argv[i + 1]);
+            i++;
+        }
+        else if (strcmp(argv[i], "--patternBytes") == 0)
+        {
+            if (i + 1 >= argc)
+                throw std::invalid_argument("Missing argument for --patternBytes");
+
+            if (std::stoi(argv[i + 1]) < 1)
+                throw std::invalid_argument("Invalid patternBytes value");
+            
+            optionalArgs.patternBytes = std::stoi(argv[i + 1]);
+            i++;
+        }
+        else
+        {
+            throw std::invalid_argument("Invalid argument");
+        }
+    }
+
+    if(optionalArgs.patternBytes.has_value()) {
+        args.patternBytes = optionalArgs.patternBytes.value();
+    } else {
+        args.patternBytes = PatternBytes;
+    }
+}
+
+
 int main(int argc, char *argv[])
 {
 
@@ -103,8 +100,7 @@ int main(int argc, char *argv[])
 
     try
     {
-        getGeneratorArgsFromArgs(args, argc, argv);
-        getOptionalArguments(optionalArgs, argc, argv);
+        parseArgs(argc, argv, args, optionalArgs);
     }
     catch (std::exception &exception)
     {
@@ -113,6 +109,8 @@ int main(int argc, char *argv[])
                   << usage << "\n";
         return EXIT_FAILURE;
     }
+
+    
 
     Generator generator = Generator(args);
     generator.setup();

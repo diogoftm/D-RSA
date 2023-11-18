@@ -12,6 +12,7 @@ struct GeneratorArgs
     std::string PW;
     std::string CS;
     uint16_t IC;
+    int patternBytes;
 };
 
 class Generator
