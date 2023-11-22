@@ -65,92 +65,126 @@ def collectDataFromConfig(config):
 
     minIterations = config["plots"]["minIterations"]
     maxIterations = config["plots"]["maxIterations"]
+    minPatterBytes = config["plots"]["minPatternBytes"]
+    maxPatterBytes = config["plots"]["maxPatternBytes"]
     numSteps = config["plots"]["numSteps"]
 
     if config["implementation"]["cpp"] == True:
         datasets["cpp"] = {
             "iterations" : [],
             "time" : [],
+            "patternBytes" : [],
         }
 
         currentStep = 0
 
         while currentStep < numSteps:
             citer = findCurrentIteration(minIterations,maxIterations,currentStep,numSteps)
-            command = f"./../cpp/RBG PW CS {citer} --limit 1"
 
+            for nPatternBytes in range(minPatterBytes, maxPatterBytes+1):
+                command = f"./../cpp/RBG PW CS {citer} --limit 1 --patternBytes {nPatternBytes}"
+                with open('/dev/null', 'w') as devnull:
+                    start_time = monotonic()
+                    subprocess.run(
+                        command,
+                        shell=True,
+                        stdout=devnull
+                    )
+                    end_time = monotonic()
 
-            with open('/dev/null', 'w') as devnull:
-                start_time = monotonic()
-                subprocess.run(
-                    command,
-                    shell=True,
-                    stdout=devnull
-                )
-                end_time = monotonic()
+                diff = (end_time - start_time)
 
-            diff = (end_time - start_time)
-
-            datasets["cpp"]["iterations"].append(citer)
-            datasets["cpp"]["time"].append(diff)
+                datasets["cpp"]["iterations"].append(citer)
+                datasets["cpp"]["time"].append(diff)
+                datasets["cpp"]["patternBytes"].append(nPatternBytes)
 
             currentStep += 1
-
             print(f"cpp {currentStep}/{numSteps} data generated")
 
-    
     if config["implementation"]["go"] == True:
         datasets["go"] = {
             "iterations" : [],
-            "time" : []
+            "time" : [],
+            "patternBytes" : [],
         }
 
         currentStep = 0
-        
+
         while currentStep < numSteps:
-            citer = findCurrentIteration(minIterations,maxIterations,currentStep,numSteps)
-            command = f"./../go/generator/generator PW CS {citer} --limit 1"
+            for nPatternBytes in range(minPatterBytes, maxPatterBytes+1):
+                citer = findCurrentIteration(minIterations,maxIterations,currentStep,numSteps)
+                command = f"./../go/generator/generator PW CS {citer} --limit 1 --patternBytes {nPatternBytes}"
+                with open('/dev/null', 'w') as devnull:
+                    start_time = monotonic()
+                    subprocess.run(
+                        command,
+                        shell=True,
+                        stdout=devnull
+                    )
+                    end_time = monotonic()
 
-            with open('/dev/null') as devnull:
-                start_time = monotonic()
-                subprocess.run(
-                    command,
-                    shell=True,
-                    stdout=devnull
-                )
-                end_time = monotonic()
+                diff = (end_time - start_time)
 
-            diff = (end_time - start_time)
-
-            datasets["go"]["iterations"].append(citer)
-            datasets["go"]["time"].append(diff)
+                datasets["go"]["iterations"].append(citer)
+                datasets["go"]["time"].append(diff)
+                datasets["go"]["patternBytes"].append(nPatternBytes)
 
             currentStep += 1
-
             print(f"go {currentStep}/{numSteps} data generated")
 
-    return datasets
+    return datasets, minPatterBytes, maxPatterBytes
 
 
 
-def generatePlotsFromDatasets(datasets):
+def generatePlotsFromDatasets(datasets, minPatternBytes, maxPatternBytes):
+    fig, axs = plt.subplots(1, 2, figsize=(12, 6))  # Creating two subplots side by side
 
-    plt.plot()
+    for patternBytes in range(minPatternBytes, maxPatternBytes + 1):
+        if datasets["cpp"] is not None:
+            cppDataset = datasets["cpp"]
+            axs[0].plot(
+                [
+                    cppDataset["iterations"][i]
+                    for i in range(len(cppDataset["iterations"]))
+                    if cppDataset["patternBytes"][i] == patternBytes
+                ],
+                [
+                    cppDataset["time"][i]
+                    for i in range(len(cppDataset["time"]))
+                    if cppDataset["patternBytes"][i] == patternBytes
+                ],
+                label=f"{patternBytes} pattern bytes",
+                marker="o",
+            )
 
-    if datasets["cpp"] is not None:
-        cppDataset = datasets["cpp"]
-        plt.plot(cppDataset["iterations"], cppDataset["time"], label="cpp implementation", marker='o')
+        if datasets["go"] is not None:
+            goDataset = datasets["go"]
+            axs[1].plot(
+                [
+                    goDataset["iterations"][i]
+                    for i in range(len(goDataset["iterations"]))
+                    if goDataset["patternBytes"][i] == patternBytes
+                ],
+                [
+                    goDataset["time"][i]
+                    for i in range(len(goDataset["time"]))
+                    if goDataset["patternBytes"][i] == patternBytes
+                ],
+                label=f"{patternBytes} pattern bytes",
+                marker="o",
+            )
 
-    if datasets["go"] is not None:
-        goDataset = datasets["go"]
-        plt.plot(goDataset["iterations"], goDataset["time"], label="go implementation", marker='o')
+    axs[0].set_xlabel("Number of iterations")
+    axs[0].set_ylabel("Time to Setup")
+    axs[0].set_title("C++ Implementation")
+    axs[0].legend()
 
+    axs[1].set_xlabel("Number of iterations")
+    axs[1].set_ylabel("Time to Setup")
+    axs[1].set_title("Go Implementation")
+    axs[1].legend()
 
-    plt.xlabel("Number of iterations")
-    plt.ylabel("Time to Setup")
-    plt.title("Time it takes in seconds to setup algorithm")
-
-    plt.legend()
+    plt.tight_layout()
     plt.show()
 
 
@@ -167,8 +201,9 @@ def main(argv):
         print("Unable to parse config file")
         print(e)
     
+    dataset, minPatternBytes, maxPatternBytes = collectDataFromConfig(config)
     generatePlotsFromDatasets(
-        collectDataFromConfig(config)
+        dataset, minPatternBytes, maxPatternBytes
     )
 
 
