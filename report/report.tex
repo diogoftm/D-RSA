@@ -81,7 +81,7 @@ This process is followed in order to generate a RSA key-pair:
   \item Compute Carmichael's totient function, $y(n)$, for that we compute $$y(n)=\frac{(p-1)(q-1)}{\gcd((p-1),(q-1))}$$.
   After the computation, we check the condition $$gcd(e, y(n)) = 1$$, if false we do not proced;
   \item Compute $d$, the modular inverse, $$d=e^{-1} \bmod{y(n)}$$;
-  \item $n$, $e$, $d$, $p$ and $q$ are the private key. $n$, $e$ and $d$ are the public key.
+  \item $n$, $e$, $d$, $p$ and $q$ are the private key. $n$ and $e$ are the public key.
 \end{enumerate}
 
 In order to export the PEM formated public/private keys, RSA key object is initialized, in Go using the Crypto library and in C++ using OpenSSL.
@@ -89,7 +89,7 @@ In order to export the PEM formated public/private keys, RSA key object is initi
 For OpenSSL the Chinese remainder theorem related constants, $dmp1$, $dmq1$ and $iqmp$, need to be computed as well:
 $$dmp1=d \bmod{(p-1)}$$, $$dmq1=d \bmod{(q-1)}$$, $$iqmp1=q \bmod{p}$$
 
-With that, $n$, $e$, $d$, $p$, $q$, $dmp1$, $dmq1$ and $iqmp1$ are the private key. $n$, $e$ and $d$ are the public key.
+With that, $n$, $e$, $d$, $p$, $q$, $dmp1$, $dmq1$ and $iqmp1$ are the private key. $n$ and $e$ are the public key.
 
 \section{Discussion}
 Falar dos resultados que conseguimos tirar do randgen.
