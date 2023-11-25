@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"math"
 	"os"
 	"strconv"
 
@@ -90,7 +89,7 @@ func (g *Generator) generatePattern(pattern *[]byte, confusionString string) {
 }
 
 func (g *Generator) findBootstrapSeed(seed *Seed) {
-	iterations := g.getArgon2IterationsByIC(int(g.args.IC))
+	iterations := 3
 
 	salt := make([]byte, 16)
 	g.setArgon2Salt(salt, g.args.CS, int(g.args.IC))
@@ -164,21 +163,6 @@ func (g *Generator) findNextSeedByPattern(pattern []byte, seed *Seed) {
 		g.seekNextBytesFromGenerator(B)
 		previousBytes = append(previousBytes[1:], B[0])
 	}
-}
-
-func (g *Generator) getArgon2IterationsByIC(IC int) int {
-	minIterations := 3
-	maxIterations := 6
-
-	usedIterations := minIterations + int((float64(maxIterations-minIterations))*(math.Log10(float64(IC))/4.0))
-
-	if usedIterations < minIterations {
-		return minIterations
-	} else if usedIterations > maxIterations {
-		return maxIterations
-	}
-
-	return usedIterations
 }
 
 func main() {
