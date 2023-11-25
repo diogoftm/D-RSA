@@ -63,8 +63,32 @@ The pseudo random byte generator and rsa key-apir generator were implemented in 
 
 \section{Implementation}
 \subsection{Random byte generator}
-...
+The generator state should be computationally hard to achieve and resistant to parallelization. To achieve this, the following steps are taken:
 
+\begin{enumerate}
+    \item Compute both the bootstrap seed and pattern.
+    \item Iterate over the generator until a pattern is discovered and repeat this process for the specified number of iterations.
+\end{enumerate}
+
+The first step involves a memory and CPU-intensive process, while the second step is CPU-intensive. Both of these characteristics make parallelization challenging to achieve.
+\subsubsection{Compute bootsrap seed}
+
+To compute the bootstrap seed, the Argon2 algorithm was employed, known for its memory-hard characteristics. Specifically, it utilizes 1GB of memory and uses 3 iterations. This amount of memory was chosen to avoid fast bootstrap seed calculations. Even if the number of iterations is set to a low value, there exists a reasonable lower bound on processing time necessary to determine the final state of the generator.
+
+The pattern is derived from the first bytes of the SHA256 hash of confusion string, dependent on the number of user-requested pattern bytes.
+
+\subsubsection{Find Final Generator State}
+
+Our generator employs the Chacha20 algorithm, known for its ability to generate extensive streams of data based on a predefined state. The algorithm chosen to compute the final seed follows these steps:
+
+\begin{enumerate}
+    \item Initialize the generator with the bootstrap seed.
+    \item For each iteration, find the first occurrency of the pattern and compute the SHA256 hash of all input until the pattern, including 32 bytes after the pattern.
+    \item Initialize the generator with the calculated digest.
+    \item Repeat step 2 for the number of iterations specified by the user.
+\end{enumerate}
+
+In step 2, it is crucial to ensure that the algorithm has found the seed. Therefore, we request 32 bytes after the seed. Additionally, we ask for the digest of previous bytes until the pattern is discovered. This calculation is necessary because Chacha20 allows random access to stream bytes. By requesting the digest of previous bytes, we ensure that the algorithm has covered the entire stream up to the point where the pattern was discovered.
 \subsection{RSA key-pair generator}
 
 This process is followed in order to generate a RSA key-pair:
