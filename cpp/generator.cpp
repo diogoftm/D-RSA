@@ -174,14 +174,18 @@ void Generator::findNextSeedByPattern(const Pattern &pattern, Seed &seed)
 
 
     std::vector<uint8_t> currPattern = std::vector<uint8_t>();
+    uint8_t* block = new uint8_t[pattern.size];
+    seekNextBytesFromGenerator(block, pattern.size);
+    
+    for(int i=0;i<pattern.size;i++) {
+        currPattern.push_back(block[i]);
+    }
 
+    delete[] block;
 
 
     for (;;)
     {
-        
-        this->seekNextBytesFromGenerator(&B, 1);
-        currPattern.push_back(B);
 
         if(currPattern.size() == (long unsigned int)(pattern.size + 1))
             currPattern.erase(currPattern.begin());
@@ -198,7 +202,9 @@ void Generator::findNextSeedByPattern(const Pattern &pattern, Seed &seed)
         }
         else
         {
-            EVP_DigestUpdate(mdCtx, &B, 1);
+            EVP_DigestUpdate(mdCtx, &currPattern.data()[0], 1);
+            this->seekNextBytesFromGenerator(&B, 1);
+            currPattern.push_back(B);
         }
     }
 }
