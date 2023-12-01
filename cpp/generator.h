@@ -3,6 +3,7 @@
 #include <string>
 #include <bitset>
 #include <openssl/evp.h>
+#include <vector>
 
 #define PatternBytes 2
 #define ZEROS_ARRAY_SIZE 4096
@@ -27,10 +28,10 @@ public:
     void nextBlock(uint8_t *block, int blockLength);
 
 protected:
-    union Pattern
+    struct Pattern
     {
-        uint8_t bytes[PatternBytes];
-        uint16_t hword[PatternBytes / 2];
+        std::vector<uint8_t> bytes;
+        int size;
     };
 
     struct Cipher

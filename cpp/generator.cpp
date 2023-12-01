@@ -5,6 +5,7 @@
 #include <cstring>
 #include <sodium.h>
 #include <math.h>
+#include <algorithm>
 #include <iostream>
 
 Generator::Generator(GeneratorArgs args)
@@ -22,6 +23,7 @@ void Generator::setup()
 {
     Seed bootstrapSeed, iterationSeed;
     Pattern pattern;
+    pattern.size = this->args.patternBytes;
 
     findBootstrapSeed(this->args, bootstrapSeed);
 
@@ -62,19 +64,22 @@ void Generator::seekNextBytesFromGenerator(uint8_t *out, int blockLength)
 
 void Generator::generatePattern(Pattern &pattern, std::string confusionString)
 {
-    unsigned int patternSize = PatternBytes;
+    unsigned int patternSize = pattern.size;
     uint8_t BUFF[32];
     int strsize = confusionString.length();
     EVP_MD_CTX *ctx = EVP_MD_CTX_new();
-
+    pattern.bytes = std::vector<uint8_t>();
     if (ctx != nullptr)
     {
         if (EVP_DigestInit_ex(ctx, EVP_sha256(), nullptr) == 1 &&
             EVP_DigestUpdate(ctx, confusionString.c_str(), strsize) == 1 &&
             EVP_DigestFinal_ex(ctx, BUFF, &patternSize) == 1)
         {
+            for(int i=0;i<pattern.size;i++) {
+                pattern.bytes.push_back(BUFF[i]);
+            }
 
-            memcpy(pattern.bytes, BUFF, PatternBytes);
+            
         }
         else
         {
@@ -158,20 +163,31 @@ void Generator::calculateSeed(Seed &outSeed, const SHA256Result &hashResult, con
 
 void Generator::findNextSeedByPattern(const Pattern &pattern, Seed &seed)
 {
+
+
     auto mdCtx = EVP_MD_CTX_new();
     EVP_DigestInit(mdCtx, EVP_sha256());
 
-    uint8_t B0, B1;
+    uint8_t B;
     SHA256Result result;
     LeadingPatternBytes leading;
 
-    this->seekNextBytesFromGenerator(&B0, 1);
+
+    std::vector<uint8_t> currPattern = std::vector<uint8_t>();
+
+
 
     for (;;)
     {
-        this->seekNextBytesFromGenerator(&B1, 1);
+        
+        this->seekNextBytesFromGenerator(&B, 1);
+        currPattern.push_back(B);
 
-        if (pattern.bytes[0] == B0 && pattern.bytes[1] == B1)
+        if(currPattern.size() == (long unsigned int)(pattern.size + 1))
+            currPattern.erase(currPattern.begin());
+
+
+        if (currPattern.size() == (long unsigned int)this->args.patternBytes && std::equal(currPattern.begin(), currPattern.end(),  pattern.bytes.begin(), pattern.bytes.end()))
         {
             EVP_DigestFinal(mdCtx, result.bytes, NULL);
 
@@ -182,8 +198,7 @@ void Generator::findNextSeedByPattern(const Pattern &pattern, Seed &seed)
         }
         else
         {
-            EVP_DigestUpdate(mdCtx, &B0, 1);
-            B0 = B1;
+            EVP_DigestUpdate(mdCtx, &B, 1);
         }
     }
 }
