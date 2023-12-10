@@ -1,5 +1,5 @@
 # Go Implementation
-[Install golang here]("https://go.dev/doc/install")
+Install the Go language [here](https://go.dev/doc/install).
 
 ## Download dependecies
 ```
@@ -38,5 +38,5 @@ go run . password confusionString 10 --limit 4
 Example run (compiled):
 ```
 go build generator.go
-./generator password confusionString 10 --limit 4
+./generator password confusionString 3 --patternBytes 3
 ```
