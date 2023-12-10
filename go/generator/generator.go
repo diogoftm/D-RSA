@@ -14,9 +14,10 @@ import (
 
 const (
 	ZEROS_ARRAY_SIZE = 4096
-	UsageStr         = `Usage: %s <password> <confusion string> <iteration count> [--limit]\n
-	--limit: number of bytes to be generated (default: no limit).\n
-	--patternBytes: number of pattern bytes (default: 2).\n`
+	UsageStr         = `Usage: %s <password> <confusion string> <iteration count> [--limit]
+	--limit: number of bytes to be generated (default: no limit)
+	--patternBytes: number of pattern bytes (default: 2)
+`
 )
 
 var PatternBytes int
