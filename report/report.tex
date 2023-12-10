@@ -126,7 +126,7 @@ Also, for low iterations we wanted to keep the process hard, so we decided to us
 \subsection{Generator setup time}
 In order to make brute force attacks unfeasible, the bootstrap process shall be very dependent on the input parameters and have slow setup process.
 
-\begin{figure}[!ht]
+\begin{figure}[H]
   \label{figure:apache_headers}
   \centering
   \includegraphics[width=0.7\textwidth]{assets/randgen_plot1.png}
@@ -138,8 +138,8 @@ just one pattern byte, the number of iterations does not make much difference, b
 should be two or three, more than that the setup takes an unusable (for most use cases) amount of time to setup. Even with three pattern bytes, takes too long
 to be includes in the plot above.
 
-For example, to test all possibilities for 4000 iterations and a two pattern bytes using the Go Implementation, it would take $1.9 \times 10^{74}$ minutes. About $8 \times 10^{72} days$.
-This value is good enough to the a brute force attack to be unfeasible.
+For example, to test all possibilities for 4000 iterations and two pattern bytes using the Go Implementation, it would take $1.9 \times 10^{74}$ minutes. About $8 \times 10^{72} days$.
+This value is good enough to consider a brute force attack to be unfeasible.
 
 
 \section{Conclusions}
