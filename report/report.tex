@@ -120,7 +120,7 @@ With that, $n$, $e$, $d$, $p$, $q$, $dmp1$, $dmq1$ and $iqmp1$ are the private k
 
 Given that the generator is based on ChaCha20, its security (after the setup is done) is the same as ChaCha20 (known to be safe). Besides that, some tests were made to ensure that small variations in input arguments produced distinct outputs \texttt{cpp/test\_RBG.cpp}.
 
-To support the safety of the setup process, the usage of Argon2 allows us to conclude that finding the bootstrap seed is both memory and computationally a hard process. Also, the calculation of SHA256 with the bytes until the pattern is found guarantees that this process cannot be fully paralelized (only finding the pattern is) but computing the hash it's harder and it's done in a single thread.
+To support the safety of the setup process, the usage of Argon2 allows us to conclude that finding the bootstrap seed is both memory and computationally a hard process. Also, the calculation of SHA256 with the bytes until the pattern is found guarantees that this process cannot be fully paralelized (only finding the pattern is) but computing the hash it's done in a \href{https://stackoverflow.com/questions/24088295/can-sha1-sha-256-sha-512-be-broken-up-to-run-across-multiple-cores-threads}{single thread}.
 
 Also, for low iterations we wanted to keep the process hard, so we decided to use Argon2.
 \subsection{Generator setup time}
